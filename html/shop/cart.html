@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Cart</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <nav><a href="shop.html">← Keep Shopping</a></nav>
+  </header>
+
+  <main>
+    <h1>Your Cart</h1>
+    <table id="cartTable">
+      <thead>
+        <tr>
+          <th>Item</th><th>Price</th><th>Qty</th><th>Line Total</th><th>Remove</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr><td colspan="3" style="text-align:right;"><strong>Subtotal</strong></td><td id="subCell">$0.00</td><td></td></tr>
+        <tr><td colspan="3" style="text-align:right;"><strong>Tax (10%)</strong></td><td id="taxCell">$0.00</td><td></td></tr>
+        <tr><td colspan="3" style="text-align:right;"><strong>Total</strong></td><td id="totalCell">$0.00</td><td></td></tr>
+      </tfoot>
+    </table>
+
+    <div class="actions">
+      <button id="clearBtn">Clear Cart</button>
+      <a href="checkout.html"><button>Checkout →</button></a>
+    </div>
+  </main>
+
+  <script src="cart.js"></script>
+  <script>
+    const tbody = document.querySelector('#cartTable tbody');
+    const subCell = document.getElementById('subCell');
+    const taxCell = document.getElementById('taxCell');
+    const totalCell = document.getElementById('totalCell');
+
+    function renderCart() {
+      const cart = CartAPI.loadCart();
+      tbody.innerHTML = "";
+
+      for (const it of cart) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${it.name}</td>
+          <td>${CartAPI.money(it.price)}</td>
+          <td>
+            <input type="number" min="1" value="${it.qty}" data-id="${it.id}" class="qty">
+          </td>
+          <td>${CartAPI.money(it.price * it.qty)}</td>
+          <td><button data-remove="${it.id}">Remove</button></td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      const totals = CartAPI.calcTotals(cart, 0.10);
+      subCell.textContent = CartAPI.money(totals.subtotal);
+      taxCell.textContent = CartAPI.money(totals.tax);
+      totalCell.textContent = CartAPI.money(totals.total);
+    }
+
+    tbody.addEventListener('change', (e) => {
+      if (e.target.classList.contains('qty')) {
+        CartAPI.updateQty(e.target.getAttribute('data-id'), e.target.value);
+        renderCart();
+      }
+    });
+
+    tbody.addEventListener('click', (e) => {
+      if (e.target.matches('button[data-remove]')) {
+        CartAPI.removeFromCart(e.target.getAttribute('data-remove'));
+        renderCart();
+      }
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      if (confirm('Clear the cart?')) { CartAPI.clearCart(); renderCart(); }
+    });
+
+    renderCart();
+  </script>
+</body>
+</html>

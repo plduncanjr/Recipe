@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Checkout / Invoice</title>
+  <link rel="stylesheet" href="style.css">
+  <style>@media print{ .no-print{ display:none } }</style>
+</head>
+<body>
+  <main>
+    <h1>Museum of Forgotten Oceans — Invoice</h1>
+    <p>Date: <span id="invDate"></span></p>
+    <p>Order #: <span id="invNum"></span></p>
+
+    <table id="invTable">
+      <thead><tr><th>Item</th><th>Price</th><th>Qty</th><th>Line Total</th></tr></thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr><td colspan="3" style="text-align:right;"><strong>Subtotal</strong></td><td id="subCell">$0.00</td></tr>
+        <tr><td colspan="3" style="text-align:right;"><strong>Tax (10%)</strong></td><td id="taxCell">$0.00</td></tr>
+        <tr><td colspan="3" style="text-align:right;"><strong>Total</strong></td><td id="totalCell">$0.00</td></tr>
+      </tfoot>
+    </table>
+
+    <div class="no-print" style="margin-top:1rem;">
+      <a href="cart.html"><button>← Back to Cart</button></a>
+      <button onclick="window.print()">Print / Save as PDF</button>
+      <button id="finalize">Finalize (clear cart)</button>
+    </div>
+  </main>
+
+  <script src="cart.js"></script>
+  <script>
+    const tbody = document.querySelector('#invTable tbody');
+    const subCell = document.getElementById('subCell');
+    const taxCell = document.getElementById('taxCell');
+    const totalCell = document.getElementById('totalCell');
+
+    function renderInvoice() {
+      const cart = CartAPI.loadCart();
+      if (!cart.length) {
+        tbody.innerHTML = '<tr><td colspan="4">Your cart is empty.</td></tr>';
+        subCell.textContent = taxCell.textContent = totalCell.textContent = CartAPI.money(0);
+        return;
+      }
+
+      tbody.innerHTML = "";
+      for (const it of cart) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${it.name}</td>
+          <td>${CartAPI.money(it.price)}</td>
+          <td>${it.qty}</td>
+          <td>${CartAPI.money(it.price * it.qty)}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      const totals = CartAPI.calcTotals(cart, 0.10);
+      subCell.textContent = CartAPI.money(totals.subtotal);
+      taxCell.textContent = CartAPI.money(totals.tax);
+      totalCell.textContent = CartAPI.money(totals.total);
+
+      document.getElementById('invDate').textContent = new Date().toLocaleString();
+      document.getElementById('invNum').textContent = 'INV-' + Math.floor(Math.random()*1e6).toString().padStart(6,'0');
+    }
+
+    document.getElementById('finalize').addEventListener('click', () => {
+      if (confirm('Finalize order and clear cart?')) {
+        CartAPI.clearCart();
+        renderInvoice();
+      }
+    });
+
+    renderInvoice();
+  </script>
+</body>
+</html>

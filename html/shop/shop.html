@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Museum Souvenir Shop</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <nav><a href="shop.html">Shop</a> | <a href="cart.html">View Cart (<span id="cartCount">0</span>)</a></nav>
+  </header>
+
+  <main>
+    <h1>Souvenir Shop</h1>
+    <div id="shopGrid" class="grid">
+      
+    </div>
+  </main>
+
+  <!-- scripts -->
+  <script src="data.js"></script>
+  <script src="cart.js"></script>
+  <script>
+    const grid = document.getElementById('shopGrid');
+
+    function renderShop() {
+      const catalog = window.CATALOG || [];
+      grid.innerHTML = "";
+      catalog.forEach(p => {
+        const card = document.createElement('div');
+        card.className = "souvenir-item";
+        card.innerHTML = `
+          <img src="${p.img}" alt="${p.name}" width="200">
+          <h3>${p.name}</h3>
+          <p>${p.blurb}</p>
+          <p><strong>${CartAPI.money(p.price)}</strong></p>
+          <button data-id="${p.id}">Add “${p.name}” to Cart</button>
+        `;
+        grid.appendChild(card);
+      });
+
+      grid.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON') {
+          const id = e.target.getAttribute('data-id');
+          CartAPI.addToCart(id, 1);
+          updateBadge();
+          alert('Added to cart.');
+        }
+      });
+    }
+
+    function updateBadge() {
+      const cart = CartAPI.loadCart();
+      const count = cart.reduce((n, it) => n + it.qty, 0);
+      document.getElementById('cartCount').textContent = count;
+    }
+
+    renderShop();
+    updateBadge();
+  </script>
+</body>
+</html>
